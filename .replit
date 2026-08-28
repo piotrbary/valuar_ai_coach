@@ -1,7 +1,10 @@
 entrypoint = "src/hosted/server.ts"
 run = "npm run hosted"
-modules = ["nodejs-20"]
+modules = ["nodejs-18", "web"]
 
 [deployment]
 run = ["npm", "run", "hosted"]
 deploymentTarget = "vm"
+
+[nix]
+channel = "stable-25_05"
