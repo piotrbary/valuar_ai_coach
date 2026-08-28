@@ -11,6 +11,45 @@ export interface StravaActivity {
   total_elevation_gain: number; // meters
   average_speed: number; // meters/second
   average_heartrate?: number;
+  map?: {
+    summary_polyline?: string;
+  };
+}
+
+/**
+ * Decodes a Google/Strava encoded polyline (precision 5) into [lat, lng] pairs.
+ * https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+ */
+export function decodePolyline(encoded: string): [number, number][] {
+  const points: [number, number][] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let result = 0;
+    let shift = 0;
+    let byte: number;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    lat += result & 1 ? ~(result >> 1) : result >> 1;
+
+    result = 0;
+    shift = 0;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    lng += result & 1 ? ~(result >> 1) : result >> 1;
+
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+
+  return points;
 }
 
 export async function fetchActivities(
@@ -48,6 +87,18 @@ function formatPacePerKm(metersPerSecond: number): string {
   const minutes = Math.floor(secondsPerKm / 60);
   const seconds = Math.round(secondsPerKm % 60);
   return `${minutes}:${String(seconds).padStart(2, "0")}/km`;
+}
+
+export function toRoute(activity: StravaActivity) {
+  const polyline = activity.map?.summary_polyline;
+  return {
+    id: activity.id,
+    name: activity.name,
+    date: activity.start_date_local.slice(0, 10),
+    type: activity.sport_type || activity.type,
+    distanceKm: Number((activity.distance / 1000).toFixed(2)),
+    points: polyline ? decodePolyline(polyline) : [],
+  };
 }
 
 export function toSummaryRow(activity: StravaActivity) {

@@ -13,7 +13,7 @@ import { StravaHostedOAuthProvider, getStravaAccessTokenForBearer } from "./prov
 import { CODE_TTL_MS, codeStore, pendingStore } from "./records.js";
 import { exchangeStravaCode } from "./stravaAuth.js";
 import { buildOpenApiSpec } from "./openapi.js";
-import { fetchActivities, toSummaryRow } from "../strava.js";
+import { fetchActivities, toRoute, toSummaryRow } from "../strava.js";
 
 const provider = new StravaHostedOAuthProvider();
 const mcpResourceUrl = new URL(`${hostedConfig.publicUrl}/mcp`);
@@ -115,6 +115,48 @@ function buildMcpServer(): McpServer {
       const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
       const activities = await fetchActivities(stravaToken, { page, perPage });
       return { content: [{ type: "text", text: JSON.stringify(activities.map(toSummaryRow), null, 2) }] };
+    },
+  );
+
+  server.registerTool(
+    "strava_get_activity_route",
+    {
+      title: "Get a Strava activity's GPS route",
+      description:
+        "Fetch the GPS route (as decoded [lat, lng] points) for a recent Strava activity, along with its name, date, type, and distance. Use position 1 (the default) for the most recent activity, 2 for the one before that, etc.",
+      inputSchema: {
+        position: z
+          .number()
+          .int()
+          .min(1)
+          .optional()
+          .describe("1 = most recent activity, 2 = second most recent, etc. Defaults to 1."),
+      },
+    },
+    async ({ position }, extra) => {
+      const bearerToken = extra.authInfo?.token;
+      if (!bearerToken) {
+        return { isError: true, content: [{ type: "text", text: "Missing authentication." }] };
+      }
+      const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
+      const [activity] = await fetchActivities(stravaToken, { page: 1, perPage: position ?? 1 }).then(
+        (activities) => activities.slice((position ?? 1) - 1),
+      );
+      if (!activity) {
+        return { isError: true, content: [{ type: "text", text: "No activity found at that position." }] };
+      }
+      const route = toRoute(activity);
+      if (route.points.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({ ...route, note: "This activity has no GPS route." }, null, 2),
+            },
+          ],
+        };
+      }
+      return { content: [{ type: "text", text: JSON.stringify(route, null, 2) }] };
     },
   );
 
