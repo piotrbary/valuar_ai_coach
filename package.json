@@ -11,14 +11,17 @@
     "auth": "tsx src/cli.ts auth",
     "activities": "tsx src/cli.ts activities",
     "web": "tsx src/server.ts",
+    "mcp": "tsx src/mcp-server.ts",
     "generate-icons": "node scripts/generate-icons.mjs",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "open": "^10.1.0"
+    "open": "^10.1.0",
+    "zod": "^4.5.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
