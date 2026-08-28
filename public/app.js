@@ -37,7 +37,8 @@ function renderActivities(rows) {
 
     const top = document.createElement("div");
     top.className = "row-top";
-    top.innerHTML = `<span class="name">${row.Name}</span><span class="date">${row.Date}</span>`;
+    const date = row["Start (local)"] ? row["Start (local)"].slice(0, 10) : "";
+    top.innerHTML = `<span class="name">${row.Name}</span><span class="date">${date}</span>`;
 
     const typeBadge = document.createElement("span");
     typeBadge.className = "type-badge";
@@ -46,10 +47,13 @@ function renderActivities(rows) {
     const stats = document.createElement("div");
     stats.className = "stats";
     stats.appendChild(metric(`${row["Distance (km)"]} km`, "Distance"));
-    stats.appendChild(metric(row.Time, "Time"));
+    stats.appendChild(metric(row["Moving Time"], "Time"));
     stats.appendChild(metric(row.Pace, "Pace"));
     stats.appendChild(metric(row["Avg HR"], "Avg HR"));
     stats.appendChild(metric(`${row["Elev Gain (m)"]} m`, "Elevation"));
+    if (row["Avg Power (W)"] !== "-") {
+      stats.appendChild(metric(`${row["Avg Power (W)"]} W`, "Avg Power"));
+    }
 
     li.appendChild(top);
     li.appendChild(typeBadge);

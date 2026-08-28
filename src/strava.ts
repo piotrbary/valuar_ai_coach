@@ -5,12 +5,27 @@ export interface StravaActivity {
   name: string;
   type: string;
   sport_type: string;
-  start_date_local: string;
+  start_date: string; // UTC ISO8601
+  start_date_local: string; // local ISO8601
+  timezone?: string;
   distance: number; // meters
   moving_time: number; // seconds
+  elapsed_time: number; // seconds, includes stops
   total_elevation_gain: number; // meters
+  elev_high?: number;
+  elev_low?: number;
   average_speed: number; // meters/second
+  max_speed?: number; // meters/second
   average_heartrate?: number;
+  max_heartrate?: number;
+  average_cadence?: number;
+  average_watts?: number;
+  max_watts?: number;
+  weighted_average_watts?: number;
+  kilojoules?: number;
+  device_watts?: boolean; // true if average_watts came from a real power meter, not an estimate
+  gear_id?: string;
+  private?: boolean;
   map?: {
     summary_polyline?: string;
   };
@@ -79,6 +94,10 @@ export interface StravaStreams {
   distance?: number[];
   time?: number[];
   velocity_smooth?: number[];
+  watts?: number[];
+  temp?: number[];
+  grade_smooth?: number[];
+  moving?: boolean[];
 }
 
 const STREAM_KEYS = [
@@ -89,6 +108,10 @@ const STREAM_KEYS = [
   "distance",
   "time",
   "velocity_smooth",
+  "watts",
+  "temp",
+  "grade_smooth",
+  "moving",
 ] as const;
 
 export async function fetchActivityStreams(
@@ -149,15 +172,36 @@ export function toRoute(activity: StravaActivity) {
 }
 
 export function toSummaryRow(activity: StravaActivity) {
+  const startLocal = new Date(activity.start_date_local);
+  const endLocal = new Date(startLocal.getTime() + activity.elapsed_time * 1000);
+
   return {
     Id: activity.id,
-    Date: activity.start_date_local.slice(0, 10),
     Name: activity.name,
     Type: activity.sport_type || activity.type,
+    "Start (local)": activity.start_date_local,
+    "End (local)": endLocal.toISOString().replace(/\.\d{3}Z$/, "Z"),
     "Distance (km)": (activity.distance / 1000).toFixed(2),
-    Time: formatDuration(activity.moving_time),
+    "Moving Time": formatDuration(activity.moving_time),
+    "Elapsed Time": formatDuration(activity.elapsed_time),
     Pace: formatPacePerKm(activity.average_speed),
     "Avg HR": activity.average_heartrate ? Math.round(activity.average_heartrate) : "-",
+    "Max HR": activity.max_heartrate ?? "-",
+    "Avg Cadence": activity.average_cadence ? Math.round(activity.average_cadence) : "-",
+    "Avg Power (W)": activity.average_watts ? Math.round(activity.average_watts) : "-",
+    "Weighted Avg Power (W)": activity.weighted_average_watts
+      ? Math.round(activity.weighted_average_watts)
+      : "-",
+    "Max Power (W)": activity.max_watts ?? "-",
+    "Power Source": activity.average_watts
+      ? activity.device_watts
+        ? "power meter"
+        : "estimated"
+      : "-",
+    "Energy (kJ)": activity.kilojoules ? Math.round(activity.kilojoules) : "-",
     "Elev Gain (m)": Math.round(activity.total_elevation_gain),
+    "Elev High (m)": activity.elev_high != null ? Math.round(activity.elev_high) : "-",
+    "Elev Low (m)": activity.elev_low != null ? Math.round(activity.elev_low) : "-",
+    Private: Boolean(activity.private),
   };
 }

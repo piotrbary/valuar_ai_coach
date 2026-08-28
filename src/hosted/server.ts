@@ -95,7 +95,7 @@ function buildMcpServer(): McpServer {
     {
       title: "List Strava activities",
       description:
-        "Fetch recent Strava training activities (runs, rides, swims, etc.) with date, type, distance, moving time, pace, average heart rate, and elevation gain.",
+        "Fetch recent Strava training activities (runs, rides, swims, etc.) with exact local start/end timestamps, type, distance, moving and elapsed time, pace, average/max heart rate, average cadence, average/weighted-average/max power in watts (when recorded by a power meter or estimated), energy in kJ, and elevation gain/high/low.",
       inputSchema: {
         page: z.number().int().min(1).optional().describe("Page number, defaults to 1"),
         perPage: z
@@ -165,7 +165,7 @@ function buildMcpServer(): McpServer {
     {
       title: "Get a Strava activity's detailed data streams",
       description:
-        "Fetch time-aligned detail streams for a specific Strava activity: GPS points, heart rate, cadence, altitude, distance, elapsed time, and speed (whichever the activity recorded). Get the activity's numeric ID first from strava_list_activities. Use this for plotting heart rate/cadence/elevation over the route or over time.",
+        "Fetch time-aligned detail streams for a specific Strava activity: GPS points, heart rate, cadence, power (watts), altitude, gradient, temperature, distance, elapsed time, speed, and whether moving at each point (whichever the activity recorded). Get the activity's numeric ID first from strava_list_activities. Use this for plotting heart rate/power/cadence/elevation over the route or over time.",
       inputSchema: {
         activityId: z.number().int().describe("The Strava activity ID, from strava_list_activities"),
       },
