@@ -12,7 +12,7 @@ interface StravaTokenResponse {
   expires_at: number;
 }
 
-function buildAuthorizeUrl(): string {
+export function buildAuthorizeUrl(): string {
   const url = new URL(AUTHORIZE_URL);
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", config.redirectUri);
@@ -55,7 +55,7 @@ function waitForAuthorizationCode(): Promise<string> {
   });
 }
 
-async function exchangeCodeForTokens(code: string): Promise<TokenSet> {
+export async function exchangeCodeForTokens(code: string): Promise<TokenSet> {
   const response = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

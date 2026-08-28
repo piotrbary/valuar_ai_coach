@@ -11,10 +11,13 @@ function requireEnv(name: string): string {
   return value;
 }
 
+const redirectUri = process.env.STRAVA_REDIRECT_URI ?? "http://localhost:8080/auth/callback";
+
 export const config = {
   clientId: requireEnv("STRAVA_CLIENT_ID"),
   clientSecret: requireEnv("STRAVA_CLIENT_SECRET"),
-  redirectUri: process.env.STRAVA_REDIRECT_URI ?? "http://localhost:8080/callback",
+  redirectUri,
+  port: Number(new URL(redirectUri).port) || 8080,
   tokenFile: path.resolve(process.cwd(), ".strava-tokens.json"),
   scopes: "read,activity:read_all",
 };

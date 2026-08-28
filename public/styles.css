@@ -1,0 +1,177 @@
+:root {
+  --bg: #0b1220;
+  --surface: #141d2f;
+  --surface-raised: #1b2540;
+  --primary: #4c8dff;
+  --primary-dark: #0b3d91;
+  --text: #eef2ff;
+  --text-muted: #9aa5c0;
+  --accent: #ff8a3d;
+  --radius: 16px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 0.75rem;
+}
+
+.app-header .logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.app-header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+main {
+  padding: 0 1.25rem 2rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.status {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.connect {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.connect p {
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.button {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.summary .stat {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 0.9rem 0.5rem;
+  text-align: center;
+}
+
+.summary .stat .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.summary .stat .label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.activities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activity-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+
+.activity-card .row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.activity-card .name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.activity-card .date {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.activity-card .type-badge {
+  display: inline-block;
+  background: var(--surface-raised);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+}
+
+.activity-card .stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.activity-card .stats .metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-card .stats .metric .value {
+  font-weight: 600;
+}
+
+.activity-card .stats .metric .label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
