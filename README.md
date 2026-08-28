@@ -15,7 +15,66 @@ Reads your Strava training data, as a foundation for an AI coaching app.
    npm install
    ```
 
-## Connect to Claude via MCP (simplest way to let Claude read your data)
+## Hosted server (recommended — works with both Claude and ChatGPT)
+
+`src/hosted/server.ts` is a standalone, multi-client server meant to be deployed once
+(e.g. on Replit) and then used from **both** Claude and ChatGPT, from any device, with
+no local setup on your end. It implements:
+
+- Its own OAuth 2.1 authorization server that proxies the actual login to Strava
+  (Strava supports neither dynamic client registration nor PKCE, so this server
+  handles both itself and only uses Strava for the identity/login step)
+- `/mcp` — a Streamable HTTP MCP endpoint for Claude (Settings → Connectors → Add
+  custom connector)
+- `/activities` + `/openapi.json` — a REST endpoint and OpenAPI schema for a ChatGPT
+  Custom GPT Action
+- Dynamic client registration, so Claude can add the connector with just a URL — no
+  manual Client ID/Secret
+
+### Deploy to Replit
+
+1. On Replit: **Create App** → **Import from GitHub** → this repository
+   (`piotrbary/valuar_ai_coach`).
+2. In the Replit **Secrets** panel, set:
+   - `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` — from your Strava API app
+   - `PUBLIC_URL` — your Replit deployment's URL (you'll get/confirm this after the
+     first deploy, e.g. `https://valuar-ai-coach.yourname.repl.co`)
+3. In the Strava API app settings (https://www.strava.com/settings/api), set
+   **Authorization Callback Domain** to your Replit domain (no `https://`, no path).
+4. Deploy using a **Reserved VM** deployment (Deploy tab) with run command
+   `npm run hosted` — a Reserved VM keeps a persistent disk, which this server needs
+   to remember registered clients and Strava sessions across restarts. The included
+   `.replit` file already points at this run command.
+5. Once deployed and you have the final public URL, make sure `PUBLIC_URL` in
+   Secrets matches it exactly, then redeploy.
+
+### Connect Claude
+
+Settings → Connectors → Add custom connector → paste `https://<your-app>/mcp` →
+Connect. Claude registers itself automatically and walks you through the Strava
+login.
+
+### Connect ChatGPT
+
+ChatGPT's Custom GPT Action editor doesn't support dynamic client registration, so
+this needs one extra one-time step:
+
+1. Generate a random secret: `openssl rand -hex 32`. Set it as the `CHATGPT_CLIENT_SECRET`
+   Replit secret and redeploy.
+2. In ChatGPT: create a Custom GPT → Configure → Actions → **Import from URL**:
+   `https://<your-app>/openapi.json`.
+3. In the Action's Authentication settings, choose **OAuth** and fill in:
+   - Client ID: `chatgpt-action`
+   - Client Secret: the value you generated in step 1
+   - Authorization URL: `https://<your-app>/authorize`
+   - Token URL: `https://<your-app>/token`
+   - Scope: `read activity:read_all`
+4. ChatGPT will now show you its callback URL. Copy it, set it as the
+   `CHATGPT_REDIRECT_URIS` Replit secret (comma-separate if there's more than one),
+   and redeploy.
+5. Back in the GPT, click **Sign in** to complete the Strava login.
+
+## Connect to Claude via MCP locally (alternative, single-device)
 
 This repo includes an MCP server (`src/mcp-server.ts`) that exposes two tools to Claude:
 

@@ -1,0 +1,7 @@
+entrypoint = "src/hosted/server.ts"
+run = "npm run hosted"
+modules = ["nodejs-20"]
+
+[deployment]
+run = ["npm", "run", "hosted"]
+deploymentTarget = "vm"

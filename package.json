@@ -12,6 +12,7 @@
     "activities": "tsx src/cli.ts activities",
     "web": "tsx src/server.ts",
     "mcp": "tsx src/mcp-server.ts",
+    "hosted": "tsx src/hosted/server.ts",
     "generate-icons": "node scripts/generate-icons.mjs",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
