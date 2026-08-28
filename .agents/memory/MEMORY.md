@@ -1,0 +1,1 @@
+- [Hosted server dependency baseline](hosted-server-dependencies.md) — Keep the HTTP stack audit-clean and use Node 20+ when updating hosted-server packages.
