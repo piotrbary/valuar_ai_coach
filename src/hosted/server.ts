@@ -13,7 +13,7 @@ import { StravaHostedOAuthProvider, getStravaAccessTokenForBearer } from "./prov
 import { CODE_TTL_MS, codeStore, pendingStore } from "./records.js";
 import { exchangeStravaCode } from "./stravaAuth.js";
 import { buildOpenApiSpec } from "./openapi.js";
-import { fetchActivities, toRoute, toSummaryRow } from "../strava.js";
+import { fetchActivities, fetchActivityStreams, toRoute, toSummaryRow } from "../strava.js";
 
 const provider = new StravaHostedOAuthProvider();
 const mcpResourceUrl = new URL(`${hostedConfig.publicUrl}/mcp`);
@@ -157,6 +157,27 @@ function buildMcpServer(): McpServer {
         };
       }
       return { content: [{ type: "text", text: JSON.stringify(route, null, 2) }] };
+    },
+  );
+
+  server.registerTool(
+    "strava_get_activity_streams",
+    {
+      title: "Get a Strava activity's detailed data streams",
+      description:
+        "Fetch time-aligned detail streams for a specific Strava activity: GPS points, heart rate, cadence, altitude, distance, elapsed time, and speed (whichever the activity recorded). Get the activity's numeric ID first from strava_list_activities. Use this for plotting heart rate/cadence/elevation over the route or over time.",
+      inputSchema: {
+        activityId: z.number().int().describe("The Strava activity ID, from strava_list_activities"),
+      },
+    },
+    async ({ activityId }, extra) => {
+      const bearerToken = extra.authInfo?.token;
+      if (!bearerToken) {
+        return { isError: true, content: [{ type: "text", text: "Missing authentication." }] };
+      }
+      const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
+      const streams = await fetchActivityStreams(stravaToken, activityId);
+      return { content: [{ type: "text", text: JSON.stringify(streams) }] };
     },
   );
 

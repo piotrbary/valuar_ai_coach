@@ -71,6 +71,53 @@ export async function fetchActivities(
   return (await response.json()) as StravaActivity[];
 }
 
+export interface StravaStreams {
+  latlng?: [number, number][];
+  heartrate?: number[];
+  cadence?: number[];
+  altitude?: number[];
+  distance?: number[];
+  time?: number[];
+  velocity_smooth?: number[];
+}
+
+const STREAM_KEYS = [
+  "latlng",
+  "heartrate",
+  "cadence",
+  "altitude",
+  "distance",
+  "time",
+  "velocity_smooth",
+] as const;
+
+export async function fetchActivityStreams(
+  accessToken: string,
+  activityId: number,
+  keys: readonly string[] = STREAM_KEYS,
+): Promise<StravaStreams> {
+  const url = new URL(`https://www.strava.com/api/v3/activities/${activityId}/streams`);
+  url.searchParams.set("keys", keys.join(","));
+  url.searchParams.set("key_by_type", "true");
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch activity streams: ${response.status} ${await response.text()}`);
+  }
+
+  const raw = (await response.json()) as Record<string, { data: unknown[] }>;
+  const streams: StravaStreams = {};
+  for (const key of keys) {
+    if (raw[key]) {
+      (streams as Record<string, unknown[]>)[key] = raw[key].data;
+    }
+  }
+  return streams;
+}
+
 function formatDuration(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -103,6 +150,7 @@ export function toRoute(activity: StravaActivity) {
 
 export function toSummaryRow(activity: StravaActivity) {
   return {
+    Id: activity.id,
     Date: activity.start_date_local.slice(0, 10),
     Name: activity.name,
     Type: activity.sport_type || activity.type,

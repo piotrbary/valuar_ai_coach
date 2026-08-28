@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { runAuthorizationFlow, getValidAccessToken } from "./auth.js";
-import { fetchActivities, toRoute, toSummaryRow } from "./strava.js";
+import { fetchActivities, fetchActivityStreams, toRoute, toSummaryRow } from "./strava.js";
 import { loadTokens } from "./tokenStore.js";
 
 const server = new McpServer({ name: "valuar-strava", version: "0.1.0" });
@@ -97,6 +97,31 @@ server.registerTool(
       };
     }
     return { content: [{ type: "text", text: JSON.stringify(route, null, 2) }] };
+  },
+);
+
+server.registerTool(
+  "strava_get_activity_streams",
+  {
+    title: "Get a Strava activity's detailed data streams",
+    description:
+      "Fetch time-aligned detail streams for a specific Strava activity: GPS points, heart rate, cadence, altitude, distance, elapsed time, and speed (whichever the activity recorded). Get the activity's numeric ID first from strava_list_activities. Use this for plotting heart rate/cadence/elevation over the route or over time. Requires strava_connect to have been run first.",
+    inputSchema: {
+      activityId: z.number().int().describe("The Strava activity ID, from strava_list_activities"),
+    },
+  },
+  async ({ activityId }) => {
+    let accessToken: string;
+    try {
+      accessToken = await getValidAccessToken();
+    } catch {
+      return {
+        isError: true,
+        content: [{ type: "text", text: "Not connected to Strava yet. Run strava_connect first." }],
+      };
+    }
+    const streams = await fetchActivityStreams(accessToken, activityId);
+    return { content: [{ type: "text", text: JSON.stringify(streams) }] };
   },
 );
 
