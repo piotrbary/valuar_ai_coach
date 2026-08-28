@@ -1,0 +1,25 @@
+{
+  "name": "valuar-ai-coach",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Reads Strava training data as a foundation for an AI coaching app.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "auth": "tsx src/cli.ts auth",
+    "activities": "tsx src/cli.ts activities",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}
