@@ -19,6 +19,7 @@ const provider = new StravaHostedOAuthProvider();
 const mcpResourceUrl = new URL(`${hostedConfig.publicUrl}/mcp`);
 
 const app = express();
+app.set("trust proxy", 1);
 
 app.use(
   mcpAuthRouter({
