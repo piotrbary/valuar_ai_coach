@@ -17,7 +17,7 @@ const requiredUrls = [
 
 if (manifest.name !== "valuar-ai-coach") throw new Error("Unexpected plugin name");
 if (manifest.apps !== "./.app.json") throw new Error("Plugin must reference ./.app.json");
-if (!appMap.apps?.["valuar-ai-coach"]?.id?.startsWith("asdk_app_")) {
+if (!appMap.apps?.["valuar-ai-coach"]?.id?.startsWith("plugin_asdk_app_")) {
   throw new Error("Missing registered MCP app mapping");
 }
 for (const field of requiredUrls) {
@@ -30,7 +30,7 @@ for (const annotation of [
   "readOnlyHint: true",
   "destructiveHint: false",
   "idempotentHint: true",
-  "openWorldHint: true",
+  "openWorldHint: false",
 ]) {
   if (!serverSource.includes(annotation)) throw new Error(`Missing ${annotation}`);
 }
