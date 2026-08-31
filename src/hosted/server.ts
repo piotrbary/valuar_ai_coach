@@ -25,7 +25,7 @@ const READ_ONLY_TOOL = {
   readOnlyHint: true,
   destructiveHint: false,
   idempotentHint: true,
-  openWorldHint: true,
+  openWorldHint: false,
 } as const;
 
 function legalPage(title: string, body: string): string {
