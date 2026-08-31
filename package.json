@@ -14,6 +14,8 @@
     "mcp": "tsx src/mcp-server.ts",
     "hosted": "tsx src/hosted/server.ts",
     "generate-icons": "node scripts/generate-icons.mjs",
+    "validate:plugin": "node scripts/validate-plugin.mjs",
+    "test": "npm run typecheck && npm run validate:plugin",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

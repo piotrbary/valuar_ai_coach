@@ -1,0 +1,32 @@
+{
+  "name": "valuar-ai-coach",
+  "version": "1.0.0",
+  "description": "Analyze read-only Strava training data with ChatGPT and Codex.",
+  "author": {
+    "name": "Valuar",
+    "url": "https://valuaraicoach.replit.app"
+  },
+  "homepage": "https://valuaraicoach.replit.app",
+  "repository": "https://github.com/piotrbary/valuar_ai_coach",
+  "keywords": ["strava", "training", "cycling", "running", "swimming", "fitness"],
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "ValuarAICoach",
+    "shortDescription": "Analyze your Strava training data",
+    "longDescription": "Connect Strava and analyze recent training activities, GPS routes, heart rate, cadence, power, speed and elevation. ValuarAICoach is read-only and cannot modify or delete Strava activities.",
+    "developerName": "Valuar",
+    "category": "Health & Fitness",
+    "capabilities": ["Read"],
+    "websiteURL": "https://valuaraicoach.replit.app",
+    "privacyPolicyURL": "https://valuaraicoach.replit.app/privacy",
+    "termsOfServiceURL": "https://valuaraicoach.replit.app/terms",
+    "defaultPrompt": [
+      "Analyze my most recent cycling activity, including heart rate, power and cadence.",
+      "Compare my recent runs and identify changes in pace at a similar heart rate.",
+      "Show the GPS route and elevation profile of my latest outdoor activity."
+    ],
+    "brandColor": "#FC4C02",
+    "composerIcon": "./assets/icon-192.png",
+    "logo": "./assets/icon-512.png"
+  }
+}

@@ -26,6 +26,11 @@ Set these in the Replit Secrets panel:
 
 The optional ChatGPT Action setup additionally uses `CHATGPT_CLIENT_SECRET` and `CHATGPT_REDIRECT_URIS`; see `README.md` for the one-time configuration steps.
 
+For public ChatGPT plugin submission, also set the temporary verification value shown by the OpenAI submission portal:
+
+- `OPENAI_APPS_CHALLENGE` — served verbatim at `/.well-known/openai-apps-challenge`
+- `SUPPORT_URL` — optional support destination; defaults to the repository's Issues page
+
 ## Checks
 
 ```bash
