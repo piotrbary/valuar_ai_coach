@@ -13,7 +13,7 @@ import { StravaHostedOAuthProvider, getStravaAccessTokenForBearer } from "./prov
 import { CODE_TTL_MS, codeStore, pendingStore } from "./records.js";
 import { exchangeStravaCode } from "./stravaAuth.js";
 import { buildOpenApiSpec } from "./openapi.js";
-import { fetchActivities, fetchActivityStreams, toRoute, toSummaryRow } from "../strava.js";
+import { fetchActivities, fetchActivitiesInRange, fetchActivity, fetchActivityStreams, fetchAthlete, fetchAthleteStats, summarizeActivities, toRoute, toSummaryRow } from "../strava.js";
 
 const provider = new StravaHostedOAuthProvider();
 const mcpResourceUrl = new URL(`${hostedConfig.publicUrl}/mcp`);
@@ -172,6 +172,99 @@ function buildMcpServer(): McpServer {
       const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
       const activities = await fetchActivities(stravaToken, { page, perPage });
       return { content: [{ type: "text", text: JSON.stringify(activities.map(toSummaryRow), null, 2) }] };
+    },
+  );
+
+
+  server.registerTool(
+    "strava_get_athlete_profile",
+    {
+      title: "Get Strava athlete profile",
+      description:
+        "Fetch the connected athlete's Strava profile and account-level training statistics. Use this when the user asks about their profile, long-term totals, year-to-date totals, biggest ride, or biggest climb.",
+      inputSchema: {},
+      annotations: READ_ONLY_TOOL,
+    },
+    async (_args, extra) => {
+      const bearerToken = extra.authInfo?.token;
+      if (!bearerToken) {
+        return { isError: true, content: [{ type: "text", text: "Missing authentication." }] };
+      }
+      const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
+      const athlete = await fetchAthlete(stravaToken);
+      const stats = await fetchAthleteStats(stravaToken, athlete.id);
+      return {
+        content: [{ type: "text", text: JSON.stringify({ athlete, stats }, null, 2) }],
+      };
+    },
+  );
+
+  server.registerTool(
+    "strava_get_activity_detail",
+    {
+      title: "Get full Strava activity detail",
+      description:
+        "Fetch full Strava details for one activity, including laps, splits, segments, device information and any extra fields returned by Strava. Get the activity ID from strava_list_activities first.",
+      inputSchema: {
+        activityId: z.number().int().describe("The Strava activity ID, from strava_list_activities"),
+      },
+      annotations: READ_ONLY_TOOL,
+    },
+    async ({ activityId }, extra) => {
+      const bearerToken = extra.authInfo?.token;
+      if (!bearerToken) {
+        return { isError: true, content: [{ type: "text", text: "Missing authentication." }] };
+      }
+      const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
+      const activity = await fetchActivity(stravaToken, activityId);
+      return { content: [{ type: "text", text: JSON.stringify(activity, null, 2) }] };
+    },
+  );
+
+  server.registerTool(
+    "strava_summarize_period",
+    {
+      title: "Summarize Strava training over a date range",
+      description:
+        "Fetch and aggregate all available Strava activities in a date range. Use this for questions about this week, this month, this year, recent training volume, sport mix, distance, moving time, elevation, average heart rate or average power. Dates are inclusive calendar dates in YYYY-MM-DD format.",
+      inputSchema: {
+        startDate: z.string().describe("Inclusive start date in YYYY-MM-DD format"),
+        endDate: z.string().describe("Inclusive end date in YYYY-MM-DD format"),
+      },
+      annotations: READ_ONLY_TOOL,
+    },
+    async ({ startDate, endDate }, extra) => {
+      const bearerToken = extra.authInfo?.token;
+      if (!bearerToken) {
+        return { isError: true, content: [{ type: "text", text: "Missing authentication." }] };
+      }
+
+      const start = new Date(`${startDate}T00:00:00Z`);
+      const end = new Date(`${endDate}T23:59:59Z`);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+        return { isError: true, content: [{ type: "text", text: "Invalid date range." }] };
+      }
+
+      const stravaToken = await getStravaAccessTokenForBearer(bearerToken);
+      const activities = await fetchActivitiesInRange(stravaToken, {
+        after: Math.floor(start.getTime() / 1000),
+        before: Math.floor(end.getTime() / 1000),
+      });
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify(
+            {
+              startDate,
+              endDate,
+              summary: summarizeActivities(activities),
+              activities: activities.map(toSummaryRow),
+            },
+            null,
+            2,
+          ),
+        }],
+      };
     },
   );
 
