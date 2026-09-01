@@ -1,4 +1,66 @@
-const ACTIVITIES_URL = "https://www.strava.com/api/v3/athlete/activities";
+const API_BASE = "https://www.strava.com/api/v3";
+const ACTIVITIES_URL = `${API_BASE}/athlete/activities`;
+
+export interface StravaAthlete {
+  id: number;
+  username?: string;
+  firstname?: string;
+  lastname?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  sex?: string;
+  premium?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  profile_medium?: string;
+  profile?: string;
+}
+
+export interface StravaAthleteStats {
+  biggest_ride_distance?: number;
+  biggest_climb_elevation_gain?: number;
+  recent_ride_totals?: Record<string, number>;
+  recent_run_totals?: Record<string, number>;
+  recent_swim_totals?: Record<string, number>;
+  ytd_ride_totals?: Record<string, number>;
+  ytd_run_totals?: Record<string, number>;
+  ytd_swim_totals?: Record<string, number>;
+  all_ride_totals?: Record<string, number>;
+  all_run_totals?: Record<string, number>;
+  all_swim_totals?: Record<string, number>;
+}
+
+async function stravaGet<T>(url: URL | string, accessToken: string): Promise<T> {
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Strava API request failed: ${response.status} ${await response.text()}`);
+  }
+  return (await response.json()) as T;
+}
+
+export async function fetchAthlete(accessToken: string): Promise<StravaAthlete> {
+  return stravaGet<StravaAthlete>(`${API_BASE}/athlete`, accessToken);
+}
+
+export async function fetchAthleteStats(
+  accessToken: string,
+  athleteId: number,
+): Promise<StravaAthleteStats> {
+  return stravaGet<StravaAthleteStats>(`${API_BASE}/athletes/${athleteId}/stats`, accessToken);
+}
+
+export async function fetchActivity(
+  accessToken: string,
+  activityId: number,
+): Promise<Record<string, unknown>> {
+  const url = new URL(`${API_BASE}/activities/${activityId}`);
+  url.searchParams.set("include_all_efforts", "true");
+  return stravaGet<Record<string, unknown>>(url, accessToken);
+}
 
 export interface StravaActivity {
   id: number;
@@ -69,21 +131,93 @@ export function decodePolyline(encoded: string): [number, number][] {
 
 export async function fetchActivities(
   accessToken: string,
-  { page = 1, perPage = 30 }: { page?: number; perPage?: number } = {},
+  {
+    page = 1,
+    perPage = 30,
+    after,
+    before,
+  }: { page?: number; perPage?: number; after?: number; before?: number } = {},
 ): Promise<StravaActivity[]> {
   const url = new URL(ACTIVITIES_URL);
   url.searchParams.set("page", String(page));
   url.searchParams.set("per_page", String(perPage));
+  if (after != null) url.searchParams.set("after", String(after));
+  if (before != null) url.searchParams.set("before", String(before));
+  return stravaGet<StravaActivity[]>(url, accessToken);
+}
 
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+export async function fetchActivitiesInRange(
+  accessToken: string,
+  {
+    after,
+    before,
+    maxPages = 20,
+  }: { after?: number; before?: number; maxPages?: number } = {},
+): Promise<StravaActivity[]> {
+  const all: StravaActivity[] = [];
+  for (let page = 1; page <= maxPages; page += 1) {
+    const batch = await fetchActivities(accessToken, { page, perPage: 100, after, before });
+    all.push(...batch);
+    if (batch.length < 100) break;
+  }
+  return all;
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch activities: ${response.status} ${await response.text()}`);
+export function summarizeActivities(activities: StravaActivity[]) {
+  const bySport: Record<
+    string,
+    { activities: number; distanceKm: number; movingHours: number; elevationGainM: number }
+  > = {};
+
+  let totalDistance = 0;
+  let totalMoving = 0;
+  let totalElevation = 0;
+  let hrSum = 0;
+  let hrCount = 0;
+  let wattsSum = 0;
+  let wattsCount = 0;
+
+  for (const activity of activities) {
+    const sport = activity.sport_type || activity.type || "Other";
+    const row = (bySport[sport] ??= {
+      activities: 0,
+      distanceKm: 0,
+      movingHours: 0,
+      elevationGainM: 0,
+    });
+    row.activities += 1;
+    row.distanceKm += activity.distance / 1000;
+    row.movingHours += activity.moving_time / 3600;
+    row.elevationGainM += activity.total_elevation_gain || 0;
+
+    totalDistance += activity.distance;
+    totalMoving += activity.moving_time;
+    totalElevation += activity.total_elevation_gain || 0;
+    if (activity.average_heartrate != null) {
+      hrSum += activity.average_heartrate;
+      hrCount += 1;
+    }
+    if (activity.average_watts != null) {
+      wattsSum += activity.average_watts;
+      wattsCount += 1;
+    }
   }
 
-  return (await response.json()) as StravaActivity[];
+  for (const value of Object.values(bySport)) {
+    value.distanceKm = Number(value.distanceKm.toFixed(2));
+    value.movingHours = Number(value.movingHours.toFixed(2));
+    value.elevationGainM = Math.round(value.elevationGainM);
+  }
+
+  return {
+    activities: activities.length,
+    totalDistanceKm: Number((totalDistance / 1000).toFixed(2)),
+    totalMovingHours: Number((totalMoving / 3600).toFixed(2)),
+    totalElevationGainM: Math.round(totalElevation),
+    averageHeartRateAcrossActivities: hrCount ? Math.round(hrSum / hrCount) : null,
+    averagePowerAcrossActivitiesW: wattsCount ? Math.round(wattsSum / wattsCount) : null,
+    bySport,
+  };
 }
 
 export interface StravaStreams {

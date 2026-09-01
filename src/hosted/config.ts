@@ -24,6 +24,9 @@ export const hostedConfig = {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean),
+  supportUrl:
+    process.env.SUPPORT_URL ?? "https://github.com/piotrbary/valuar_ai_coach/issues",
+  openaiAppsChallenge: process.env.OPENAI_APPS_CHALLENGE?.trim(),
 };
 
 export const stravaOAuthCallbackUrl = `${hostedConfig.publicUrl}/oauth/strava/callback`;

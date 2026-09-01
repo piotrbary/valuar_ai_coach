@@ -1,0 +1,20 @@
+{
+  "name": "valuar-plugins",
+  "interface": {
+    "displayName": "Valuar Plugins"
+  },
+  "plugins": [
+    {
+      "name": "valuar-ai-coach",
+      "source": {
+        "source": "local",
+        "path": "./plugins/valuar-ai-coach"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Health & Fitness"
+    }
+  ]
+}

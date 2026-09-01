@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 export class JsonStore<T> {
@@ -12,7 +12,9 @@ export class JsonStore<T> {
   }
 
   private writeAll(data: Record<string, T>): void {
-    writeFileSync(this.filePath, JSON.stringify(data, null, 2), { mode: 0o600 });
+    const temporaryPath = `${this.filePath}.${process.pid}.tmp`;
+    writeFileSync(temporaryPath, JSON.stringify(data, null, 2), { mode: 0o600 });
+    renameSync(temporaryPath, this.filePath);
   }
 
   get(key: string): T | undefined {

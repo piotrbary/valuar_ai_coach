@@ -2,6 +2,22 @@
 
 Reads your Strava training data, as a foundation for an AI coaching app.
 
+## ChatGPT plugin package
+
+The public plugin package is in `plugins/valuar-ai-coach`. It maps the registered
+ValuarAICoach MCP connection, provides production listing metadata, and is exposed
+through the repository marketplace in `.agents/plugins/marketplace.json` for local
+testing. The production MCP endpoint is `https://valuaraicoach.replit.app/mcp`.
+
+Before public submission:
+
+1. Deploy the current `main` branch to Replit.
+2. Run `npm test`.
+3. Verify `/privacy`, `/terms`, `/support`, and the OAuth flow.
+4. Set `OPENAI_APPS_CHALLENGE` to the value supplied by the OpenAI submission portal.
+5. Scan tools again and confirm that all tools are read-only and non-destructive.
+6. Complete publisher identity verification and provide five positive and three negative test cases.
+
 ## Setup
 
 1. Create a Strava API app at https://www.strava.com/settings/api.
